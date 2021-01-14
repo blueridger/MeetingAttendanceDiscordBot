@@ -46,9 +46,9 @@ Participants: @Pearl @Garnet
 # Installation
 I used the infrastructure described in this tutorial: https://www.freecodecamp.org/news/create-a-discord-bot-with-python/
 
-I gave the bot these permissions, but it may not need all of them:
-View Channels
-Send Messages
-Embed Links
-Read Message History
-(permissions=84992)
+I gave the bot these permissions, but it may not need all of them. (permissions=84992)
+- View Channels
+- Send Messages
+- Embed Links
+- Read Message History
+
