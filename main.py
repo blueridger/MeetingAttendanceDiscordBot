@@ -2,6 +2,7 @@ import discord
 import os
 from datetime import datetime, timedelta
 import time
+from keep_alive import keep_alive
 
 client = discord.Client()
 
@@ -65,5 +66,5 @@ async def on_message(message):
     roam_formatted = '[[' + ']]\n[['.join(participant_names) + ']]'
     await message.author.send(content=roam_formatted)
     
-
+keep_alive()
 client.run(os.getenv('TOKEN'))
