@@ -5,7 +5,7 @@ It posts a meeting summary message that auto-updates a list of participants as p
 
 # Usage
 ```
-$meeting Channel: voice_channel_name LengthMins: length_in_minutes
+$meeting Channel: voice_channel_name Duration: length_in_minutes
 ```
 You can also intersperse additional key-values arguments of the form `Key: value1 value2 ...` in any order, which will appear as additional lines in the output.
 
@@ -13,12 +13,12 @@ White space is reformatted, so feel free to use line breaks if you want more hum
 
 # Example
 ```
-$meeting Topic: Community Call LengthMins: 60 Channel: General-Voice Hosts: @Garnet @everyone Amethyst Fancypants: also @Garnet Notes: https://www.github.com
+$meeting Topic: Community Call Duration: 60 Channel: General-Voice Hosts: @Garnet @everyone Amethyst Fancypants: also @Garnet Notes: https://www.github.com
 ```
 which equivalent to:
 ```
 $meeting Topic: Community Call 
-LengthMins: 60
+Duration: 60
 Channel: General-Voice 
 Hosts: @Garnet @everyone      Amethyst 
 Fancypants: also @Garnet 
@@ -27,7 +27,7 @@ Notes: https://www.github.com
 will first output:
 ```
 Topic: Community Call
-LengthMins: 60
+Duration: 60
 Channel: General-Voice
 Hosts: @Garnet @everyone Amethyst
 Fancypants: also @Garnet
@@ -38,7 +38,7 @@ In this example, @Pearl was already in the General-Voice channel. When another u
 ```
 Participants: (watching) @Pearl @Garnet
 ```
-When LengthMins minutes pass, the code thread will finish and the last line will finalize as:
+When Duration minutes pass, the code thread will finish and the last line will finalize as:
 ```
 Participants: @Pearl @Garnet
 ```

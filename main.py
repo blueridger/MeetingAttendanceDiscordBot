@@ -7,7 +7,7 @@ from keep_alive import keep_alive
 
 client = discord.Client()
 
-KEY_LENGTH_MINS = 'LengthMins:'
+KEY_LENGTH_MINS = 'Duration:'
 KEY_CHANNEL = 'Channel:'
 REQUIRED_KEYS = [KEY_CHANNEL, KEY_LENGTH_MINS]
 BUSY_WAIT_INTERVAL_SECONDS = 10
@@ -55,7 +55,7 @@ async def on_message(message):
         await message.author.send(content="A required key was not found. Please provide the keys: {requiredKeys}\n https://github.com/blueridger/MeetingAttendanceDiscordBot/blob/mainline/README.md".format(requiredKeys=REQUIRED_KEYS))
         return
       if (not is_int(result[KEY_LENGTH_MINS]) or int(result[KEY_LENGTH_MINS]) < 1 or int(result[KEY_LENGTH_MINS]) > 120):
-        await message.author.send(content="LengthMins: [{lengthMins}] was not valid. Please provide an integer between 1 and 120.".format(lengthMins=result[KEY_LENGTH_MINS]))
+        await message.author.send(content="{length_mins_key} [{length_mins}] was not valid. Please provide an integer between 1 and 120.".format(length_mins_key=KEY_LENGTH_MINS, length_mins=result[KEY_LENGTH_MINS]))
         return
 
       # Parse some helper variables
