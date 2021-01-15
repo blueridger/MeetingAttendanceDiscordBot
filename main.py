@@ -78,6 +78,7 @@ async def on_message(message):
       participant_names = set()
       while datetime.utcnow() < startTime + timedelta(seconds=timeLimitSecs):
         users = [(await client.fetch_user(user_id)) for user_id in voice_channel.voice_states.keys()]
+        filter(lambda u: not u.bot, users)
         participants = participants | set([user.mention for user in users])
         participant_names = participant_names | set([user.name for user in users])
         result['Participants:'] = '(watching) ' + ' '.join(participants)
