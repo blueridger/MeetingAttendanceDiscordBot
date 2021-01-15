@@ -10,9 +10,11 @@ client = discord.Client()
 # keys must be lowercase
 KEY_LENGTH_MINS = 'duration:'.lower()
 KEY_CHANNEL = 'channel:'.lower()
+KEY_OUTPUT_CHANNEL = 'outputchannel:'.lower()
 KEY_PARTICIPANTS = 'participants:'.lower()
 
 REQUIRED_KEYS = [KEY_CHANNEL, KEY_LENGTH_MINS]
+OUTPUT_OMITTED_KEYS = [KEY_OUTPUT_CHANNEL]
 BUSY_WAIT_INTERVAL_SECONDS = 10
 
 def is_int(s):
@@ -25,7 +27,8 @@ def is_int(s):
 def format_message(msgDict):
   message = ""
   for key, value in msgDict.items():
-    message = message + "\n" + key.capitalize() + "  " + value
+    if key not in OUTPUT_OMITTED_KEYS:
+      message = message + "\n" + key.capitalize() + "  " + value
   return message
 
 @client.event
@@ -43,15 +46,14 @@ async def on_message(message):
 
       # Parse the command
       result = {}
-      currentKey = ""
+      currentKey = None
       for param in message.content.split():
         if param.endswith(':'):
           currentKey = param.lower()
-          result[currentKey] = ""
-        elif currentKey in REQUIRED_KEYS:
-          result[currentKey] = param
-        elif currentKey in result.keys():
+        elif currentKey in result.keys() and currentKey not in REQUIRED_KEYS:
           result[currentKey] = ' '.join([result[currentKey], param])
+        elif currentKey:
+          result[currentKey] = param
       
       # Handle incorrect usage
       if not all(key in result.keys() for key in REQUIRED_KEYS):
@@ -64,11 +66,19 @@ async def on_message(message):
       # Parse some helper variables
       timeLimitSecs = int(result[KEY_LENGTH_MINS]) * 60
       voice_channel = None
-      for channel in message.guild.channels:
+      for channel in message.guild.voice_channels:
         if result[KEY_CHANNEL] in channel.name:
           voice_channel = channel
           result[KEY_CHANNEL] = channel.name
           break
+
+      output_channel = message.channel
+      if KEY_OUTPUT_CHANNEL in result.keys():
+        for channel in message.guild.text_channels:
+          if result[KEY_OUTPUT_CHANNEL] in channel.name:
+            output_channel = channel
+            result[KEY_OUTPUT_CHANNEL] = channel.name
+            break
       
       # Handle more incorrect usage
       if (not voice_channel):
@@ -76,7 +86,7 @@ async def on_message(message):
         return
       
       # Send the initial output
-      meeting_message = await message.channel.send(format_message(result))
+      meeting_message = await output_channel.send(format_message(result))
 
       # Watch and build the participants lists and update the output
       participants = set()
