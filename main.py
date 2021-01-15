@@ -90,6 +90,9 @@ async def on_message(message):
       await meeting_message.edit(content=format_message(result))
       roam_formatted = message.content + '\n[[' + ']]\n[['.join(participant_names) + ']]'
       await message.author.send(content=roam_formatted)
+    except discord.errors.NotFound:
+      # Message was deleted
+      pass
     except:
       traceback.print_exc()
       try:
