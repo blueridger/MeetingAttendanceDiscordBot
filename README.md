@@ -7,7 +7,7 @@ It posts a meeting summary message that auto-updates a list of participants as p
 ```
 $meeting Channel: voice_channel_name Duration: length_in_minutes
 ```
-You can also intersperse additional key-values arguments of the form `Key: value1 value2 ...` in any order, which will appear as additional lines in the output.
+You can also intersperse additional key-values arguments of the form `Key: value1 value2 ...` in any order, which will appear as additional lines in the output. Keys are case insensitive.
 
 White space is reformatted, so feel free to use line breaks if you want more human-readable commands. User tags and text formatting are carried over into the output.
 

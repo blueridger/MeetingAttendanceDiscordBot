@@ -7,8 +7,11 @@ from keep_alive import keep_alive
 
 client = discord.Client()
 
-KEY_LENGTH_MINS = 'Duration:'
-KEY_CHANNEL = 'Channel:'
+# keys must be lowercase
+KEY_LENGTH_MINS = 'duration:'.lower()
+KEY_CHANNEL = 'channel:'.lower()
+KEY_PARTICIPANTS = 'participants:'.lower()
+
 REQUIRED_KEYS = [KEY_CHANNEL, KEY_LENGTH_MINS]
 BUSY_WAIT_INTERVAL_SECONDS = 10
 
@@ -22,7 +25,7 @@ def is_int(s):
 def format_message(msgDict):
   message = ""
   for key, value in msgDict.items():
-    message = message + "\n" + key + "  " + value
+    message = message + "\n" + key.capitalize() + "  " + value
   return message
 
 @client.event
@@ -43,9 +46,9 @@ async def on_message(message):
       currentKey = ""
       for param in message.content.split():
         if param.endswith(':'):
-          currentKey = param
+          currentKey = param.lower()
           result[currentKey] = ""
-        elif currentKey in [KEY_LENGTH_MINS, KEY_CHANNEL]:
+        elif currentKey in REQUIRED_KEYS:
           result[currentKey] = param
         elif currentKey in result.keys():
           result[currentKey] = ' '.join([result[currentKey], param])
@@ -81,12 +84,12 @@ async def on_message(message):
         filter(lambda u: not u.bot, users)
         participants = participants | set([user.mention for user in users])
         participant_names = participant_names | set([user.name for user in users])
-        result['Participants:'] = '(watching) ' + ' '.join(participants)
+        result[KEY_PARTICIPANTS] = '(watching) ' + ' '.join(participants)
         await meeting_message.edit(content=format_message(result), suppress=True)
         time.sleep(BUSY_WAIT_INTERVAL_SECONDS)
 
       # Finalize outputs
-      result['Participants:'] = ' '.join(participants)
+      result[KEY_PARTICIPANTS] = ' '.join(participants)
       await meeting_message.edit(content=format_message(result))
       roam_formatted = message.content + '\n[[' + ']]\n[['.join(participant_names) + ']]'
       await message.author.send(content=roam_formatted)
