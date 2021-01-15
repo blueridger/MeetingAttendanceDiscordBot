@@ -65,8 +65,10 @@ async def on_message(message):
       timeLimitSecs = int(result[KEY_LENGTH_MINS]) * 60
       voice_channel = None
       for channel in message.guild.channels:
-        if channel.name == result[KEY_CHANNEL]:
+        if result[KEY_CHANNEL] in channel.name:
           voice_channel = channel
+          result[KEY_CHANNEL] = channel.name
+          break
       
       # Handle more incorrect usage
       if (not voice_channel):
