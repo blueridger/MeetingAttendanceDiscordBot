@@ -15,7 +15,7 @@ KEY_PARTICIPANTS = 'participants:'.lower()
 
 REQUIRED_KEYS = [KEY_CHANNEL, KEY_LENGTH_MINS]
 OUTPUT_OMITTED_KEYS = [KEY_OUTPUT_CHANNEL]
-BUSY_WAIT_INTERVAL_SECONDS = 10
+BUSY_WAIT_INTERVAL_SECONDS = 20
 
 def is_int(s):
     try: 
@@ -86,19 +86,27 @@ async def on_message(message):
         return
       
       # Send the initial output
+      print('Starting to watch.')
       meeting_message = await output_channel.send(format_message(result))
 
       # Watch and build the participants lists and update the output
+      participant_ids = set()
       participants = set()
       participant_names = set()
       while datetime.utcnow() < startTime + timedelta(seconds=timeLimitSecs):
-        users = [(await client.fetch_user(user_id)) for user_id in voice_channel.voice_states.keys()]
+        new_ids = set(voice_channel.voice_states.keys()) - participant_ids
+        users = [(await client.fetch_user(user_id)) for user_id in new_ids]
         users = list(filter(lambda u: not u.bot, users))
         participants = participants | set([user.mention for user in users])
         participant_names = participant_names | set([user.name for user in users])
+        participant_ids = participant_ids | new_ids
         result[KEY_PARTICIPANTS] = '(watching) ' + ' '.join(participants)
-        await meeting_message.edit(content=format_message(result), suppress=True)
+        if len(new_ids) > 0:
+          print(new_ids)
+          await meeting_message.edit(content=format_message(result), suppress=True)
         time.sleep(BUSY_WAIT_INTERVAL_SECONDS)
+      
+      print('Finished watching.')
 
       # Finalize outputs
       result[KEY_PARTICIPANTS] = ' '.join(participants)
@@ -108,6 +116,8 @@ async def on_message(message):
     except discord.errors.NotFound:
       # Message was deleted
       pass
+    except discord.errors.HTTPException as e:
+      print(e)
     except:
       traceback.print_exc()
       try:
@@ -116,4 +126,8 @@ async def on_message(message):
         pass
     
 keep_alive()
-client.run(os.getenv('TOKEN'))
+try:
+  client.run(os.getenv('TOKEN'))
+except discord.errors.HTTPException as e:
+  print(e)
+  print(e.response)
