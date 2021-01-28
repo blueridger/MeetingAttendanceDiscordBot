@@ -87,7 +87,7 @@ async def on_message(message):
       
       # Send the initial output
       meeting_message = await output_channel.send(format_message(parsed_params))
-      startWatching(meeting_message, message.author, parsed_params, voice_channel.id)
+      await startWatching(meeting_message, message.author, parsed_params, voice_channel.id)
 
       
     except discord.errors.NotFound:
@@ -102,7 +102,7 @@ async def on_message(message):
       except Exception as e:
         print(e)
 
-def startWatching(meeting_message, user, parsed_params, voice_channel_id, participant_ids = set(), participants = set(), participant_names = set()):
+async def startWatching(meeting_message, user, parsed_params, voice_channel_id, participant_ids = set(), participants = set(), participant_names = set()):
   startTime = meeting_message.created_at
   timeLimitSecs = int(parsed_params[KEY_LENGTH_MINS]) * 60
   # Watch and build the participants lists and update the output
