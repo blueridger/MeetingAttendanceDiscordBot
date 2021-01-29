@@ -5,41 +5,45 @@ It posts a meeting summary message that auto-updates a list of participants as p
 
 # Usage
 ```
-$meeting Channel: voice_channel_name_substring Duration: length_in_minutes [OutputChannel: text_channel_name]
+!meeting duration: 60 [optional parameters]
+[content]
 ```
-You can also intersperse additional key-values arguments of the form `Key: value1 value2 ...` in any order, which will appear as additional lines in the output. Keys are case insensitive.
+**Required Parameter:**
+- `duration: 60` is for choosing how many **minutes** the bot should watch for participants. Any integer between 1 and 120 is accepted.
 
-White space is reformatted, so feel free to use line breaks if you want more human-readable commands. User tags and text formatting are carried over into the output.
+**Optional Parameters:**
+- `channel: voice-channel-name` is for selecting which voice channel to watch. A partial name will be matched to the first channel that matches. Defaults to the one you are already in.
+- `output: meeting-notes-channel` is for selecting which channel the bot should send the output to. A partial name will be matched to the first channel that matches. Defaults to the channel where the command is used.
+
+Parameters are case-insensitive and must be included in the first line.
+
+**Content:**
+- All lines after the first line will be included as is in the output, including mentions and styling.
+
 
 # Example
 ```
-$meeting Topic: Community Call Duration: 60 Channel: General-Voice Hosts: @Garnet @everyone Amethyst Fancypants: also @Garnet Notes: https://www.github.com
-```
-which equivalent to:
-```
-$meeting Topic: Community Call 
-Duration: 60
-Channel: General-Voice 
-Hosts: @Garnet @everyone      Amethyst 
-Fancypants: also @Garnet 
+!meeting duration: 59 channel: general outputchannel: notes
+Hosts: @Garnet @everyone Amethyst
+Fancypants: also @Garnet
 Notes: https://www.github.com
 ```
-will first output:
+will first output something like:
 ```
-Topic: Community Call
-Duration: 60
-Channel: General-Voice
 Hosts: @Garnet @everyone Amethyst
 Fancypants: also @Garnet
 Notes: https://www.github.com
 Participants: (watching) @Pearl
 ```
-In this example, @Pearl was already in the General-Voice channel. When another user joins the channel, the bot will update the last line to:
+In this example, @Pearl was already in the General-Voice channel, which matched to the partial name `general`. When another user joins the channel, the bot will update the last line:
 ```
 Participants: (watching) @Pearl @Garnet
 ```
-When Duration minutes pass, the code thread will finish and the last line will finalize as:
+When 59 minutes pass, the code thread will finish and the output message will finalize as:
 ```
+Hosts: @Garnet @everyone Amethyst
+Fancypants: also @Garnet
+Notes: https://www.github.com
 Participants: @Pearl @Garnet
 ```
 

@@ -15,9 +15,9 @@ KEY_CHANNEL = 'channel:'.lower()
 KEY_OUTPUT_CHANNEL = 'outputchannel:'.lower()
 KEY_PARTICIPANTS = 'participants:'.lower()
 
-REQUIRED_KEYS = [KEY_CHANNEL, KEY_LENGTH_MINS]
-OUTPUT_OMITTED_KEYS = [KEY_OUTPUT_CHANNEL]
+REQUIRED_KEYS = [KEY_LENGTH_MINS]
 BUSY_WAIT_INTERVAL_SECONDS = 15
+DOCUMENTATION_LINK = 'https://github.com/blueridger/MeetingAttendanceDiscordBot/blob/mainline/README.md'
 
 def is_int(s):
     try: 
@@ -25,13 +25,6 @@ def is_int(s):
         return True
     except ValueError:
         return False
-
-def format_message(msgDict):
-  message = ""
-  for key, value in msgDict.items():
-    if key not in OUTPUT_OMITTED_KEYS:
-      message = message + "\n" + key.capitalize() + "  " + value
-  return message
 
 @client.event
 async def on_ready():
@@ -42,52 +35,60 @@ async def on_message(message):
   if message.author == client.user:
     return
 
-  if message.content.startswith('$meeting'):
+  if message.content.startswith('!meeting'):
     try:
+      voice_channel_substring = None
+      output_channel_substring = None
+      duration_mins = None
 
-      # Parse the command
-      parsed_params = {}
-      currentKey = None
-      for param in message.content.split():
-        if param.endswith(':'):
-          currentKey = param.lower()
-        elif currentKey in parsed_params.keys() and currentKey not in REQUIRED_KEYS:
-          parsed_params[currentKey] = ' '.join([parsed_params[currentKey], param])
-        elif currentKey:
-          parsed_params[currentKey] = param
-      
-      # Handle incorrect usage
-      if not all(key in parsed_params.keys() for key in REQUIRED_KEYS):
-        await message.author.send(content="A required key was not found. Please provide the keys: {requiredKeys}\n https://github.com/blueridger/MeetingAttendanceDiscordBot/blob/mainline/README.md".format(requiredKeys=REQUIRED_KEYS))
+      command,_,metadata = message.content.partition('\n')
+      command = command.lower().split()
+      try:
+        if KEY_CHANNEL in command:
+          voice_channel_substring = command[command.index(KEY_CHANNEL) + 1]
+        if KEY_OUTPUT_CHANNEL in command:
+          output_channel_substring = command[command.index(KEY_OUTPUT_CHANNEL) + 1]
+        if KEY_LENGTH_MINS in command:
+          duration_mins = command[command.index(KEY_LENGTH_MINS) + 1]
+      except:
+        await message.author.send(content=f"Failed to parse. Unexpected end of parameters.\n{DOCUMENTATION_LINK}")
         return
-      if (not is_int(parsed_params[KEY_LENGTH_MINS]) or int(parsed_params[KEY_LENGTH_MINS]) < 1 or int(parsed_params[KEY_LENGTH_MINS]) > 120):
-        await message.author.send(content="%s [%s] was not valid. Please provide an integer between 1 and 120." % (KEY_LENGTH_MINS, parsed_params[KEY_LENGTH_MINS]))
+
+      # Handle incorrect usage
+      if not all(key in command for key in REQUIRED_KEYS):
+        await message.author.send(content=f"A required key was not found. Please provide the keys: {REQUIRED_KEYS}\n{DOCUMENTATION_LINK}")
+        return
+      if (not is_int(duration_mins) or int(duration_mins) < 1 or int(duration_mins) > 120):
+        await message.author.send(content=f"{KEY_LENGTH_MINS} [{duration_mins}] was not valid. Please provide an integer between 1 and 120.")
         return
 
       # Parse some helper variables
       voice_channel = None
-      for channel in message.guild.voice_channels:
-        if parsed_params[KEY_CHANNEL] in channel.name:
-          voice_channel = channel
-          parsed_params[KEY_CHANNEL] = channel.name
-          break
+      if voice_channel_substring is not None:
+        for channel in message.guild.voice_channels:
+          if voice_channel_substring in channel.name.lower():
+            voice_channel = channel
+            voice_channel_substring = channel.name
+            break
+      elif message.author.voice is not None:
+        voice_channel = message.author.voice.channel
 
       output_channel = message.channel
-      if KEY_OUTPUT_CHANNEL in parsed_params.keys():
+      if output_channel_substring is not None:
         for channel in message.guild.text_channels:
-          if parsed_params[KEY_OUTPUT_CHANNEL] in channel.name:
+          if output_channel_substring in channel.name.lower():
             output_channel = channel
-            parsed_params[KEY_OUTPUT_CHANNEL] = channel.name
+            output_channel_substring = channel.name
             break
       
       # Handle more incorrect usage
       if (not voice_channel):
-        await message.author.send(content="Channel: %s was not found. Please provide a valid voice channel name." % parsed_params[KEY_CHANNEL])
+        await message.author.send(content="Voice channel was not found. Please enter a voice channel or use the `channel:` parameter.")
         return
       
       # Send the initial output
-      meeting_message = await output_channel.send(format_message(parsed_params))
-      await startWatching(meeting_message, message.author, parsed_params, voice_channel.id)
+      meeting_message = await output_channel.send(content=metadata)
+      await startWatching(meeting_message, duration_mins, message.author, metadata, voice_channel.id)
 
       
     except discord.errors.NotFound:
@@ -102,31 +103,32 @@ async def on_message(message):
       except Exception as e:
         print(e)
 
-async def startWatching(meeting_message, user, parsed_params, voice_channel_id, participant_ids = set(), participants = set(), participant_names = set()):
+async def startWatching(meeting_message, duration_mins, user, metadata, voice_channel_id, participant_ids = set()):
   startTime = meeting_message.created_at
-  timeLimitSecs = int(parsed_params[KEY_LENGTH_MINS]) * 60
+  timeLimitSecs = int(duration_mins) * 60
+  users = set([(await client.fetch_user(user_id)) for user_id in participant_ids])
+
   # Watch and build the participants lists and update the output
   print('[%s] Starting to watch.' % meeting_message.id)
   while datetime.utcnow() < startTime + timedelta(seconds=timeLimitSecs):
     new_ids = set((await client.fetch_channel(voice_channel_id)).voice_states.keys()) - participant_ids
-    users = [(await client.fetch_user(user_id)) for user_id in new_ids]
-    users = list(filter(lambda u: not u.bot, users))
-    participants = participants | set([user.mention for user in users])
-    participant_names = participant_names | set([user.name for user in users])
-    participant_ids = participant_ids | new_ids
-    parsed_params[KEY_PARTICIPANTS] = '(watching) ' + ' '.join(participants)
     if len(new_ids) > 0:
+      users = users | set([(await client.fetch_user(user_id)) for user_id in new_ids])
+      users = set(filter(lambda u: not u.bot, users))
+      participants = set([user.mention for user in users])
+      participant_ids = participant_ids | new_ids
+      participants_string = '\nParticipants: (watching) ' + ' '.join(participants)
       print('[%s] Adding %s' % (meeting_message.id, new_ids))
-      await meeting_message.edit(content=format_message(parsed_params), suppress=True)
+      await meeting_message.edit(content=metadata + participants_string, suppress=True)
     time.sleep(BUSY_WAIT_INTERVAL_SECONDS)
-  
+    
   print('[%s] Finished watching.' % meeting_message.id)
 
   # Finalize outputs
-  parsed_params[KEY_PARTICIPANTS] = ' '.join(participants)
-  await meeting_message.edit(content=format_message(parsed_params))
-  roam_formatted = '\n```[[' + ']]\n[['.join(participant_names) + ']]```'
-  await user.send(content=roam_formatted)
+  participants_string = '\nParticipants: ' + ' '.join(participants)
+  await meeting_message.edit(content=metadata + participants_string, suppress=True)
+  roam_formatted = '\n```[[' + ']]\n[['.join([user.name for user in users]) + ']]```'
+  await user.send(content=metadata + roam_formatted)
   print('[%s] Finished thread.' % meeting_message.id)
 
 keep_alive()
