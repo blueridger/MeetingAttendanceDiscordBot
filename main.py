@@ -87,7 +87,7 @@ async def on_message(message):
         return
       
       # Send the initial output
-      meeting_message = await output_channel.send(content=metadata)
+      meeting_message = await output_channel.send(content=metadata + '\nParticipants: (watching)')
       await startWatching(meeting_message, duration_mins, message.author, metadata, voice_channel.id)
 
       
@@ -125,6 +125,7 @@ async def startWatching(meeting_message, duration_mins, user, metadata, voice_ch
   print('[%s] Finished watching.' % meeting_message.id)
 
   # Finalize outputs
+  participants = set([user.mention for user in users])
   participants_string = '\nParticipants: ' + ' '.join(participants)
   await meeting_message.edit(content=metadata + participants_string, suppress=True)
   roam_formatted = '\n```[[' + ']]\n[['.join([user.name for user in users]) + ']]```'
