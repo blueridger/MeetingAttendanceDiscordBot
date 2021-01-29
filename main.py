@@ -10,10 +10,9 @@ from replit import db
 client = discord.Client()
 
 # keys must be lowercase
-KEY_LENGTH_MINS = 'duration:'.lower()
-KEY_CHANNEL = 'channel:'.lower()
-KEY_OUTPUT_CHANNEL = 'outputchannel:'.lower()
-KEY_PARTICIPANTS = 'participants:'.lower()
+KEY_LENGTH_MINS = '--duration'.lower()
+KEY_CHANNEL = '--channel'.lower()
+KEY_OUTPUT_CHANNEL = '--outputchannel'.lower()
 
 REQUIRED_KEYS = [KEY_LENGTH_MINS]
 BUSY_WAIT_INTERVAL_SECONDS = 15
