@@ -15,7 +15,7 @@ KEY_CHANNEL = '--channel'.lower()
 KEY_OUTPUT_CHANNEL = '--outputchannel'.lower()
 
 REQUIRED_KEYS = [KEY_LENGTH_MINS]
-BUSY_WAIT_INTERVAL_SECONDS = 15
+BUSY_WAIT_INTERVAL_SECONDS = 30
 DOCUMENTATION_LINK = 'https://github.com/blueridger/MeetingAttendanceDiscordBot/blob/mainline/README.md'
 
 
@@ -116,6 +116,7 @@ async def on_message(message):
             print('[%s] Message was deleted.' % meeting_message.id)
         except discord.errors.HTTPException as e:
             print(e)
+            print(type(e.response))
         except:
             traceback.print_exc()
             try:

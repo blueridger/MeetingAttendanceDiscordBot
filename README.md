@@ -9,11 +9,11 @@ It posts a meeting summary message that auto-updates a list of participants as p
 [content]
 ```
 **Required Parameter:**
-- `duration: 60` is for choosing how many **minutes** the bot should watch for participants. Any integer between 1 and 120 is accepted.
+- `--duration 60` is for choosing how many **minutes** the bot should watch for participants. Any integer between 1 and 120 is accepted.
 
 **Optional Parameters:**
-- `channel: voice-channel-name` is for selecting which voice channel to watch. A partial name will be matched to the first channel that matches. Defaults to the one you are already in.
-- `output: meeting-notes-channel` is for selecting which channel the bot should send the output to. A partial name will be matched to the first channel that matches. Defaults to the channel where the command is used.
+- `--channel voice-channel-name` is for selecting which voice channel to watch. A partial name will be matched to the first channel that matches. Defaults to the one you are already in.
+- `--outputchannel meeting-notes-channel` is for selecting which channel the bot should send the output to. A partial name will be matched to the first channel that matches. Defaults to the channel where the command is used.
 
 Parameters are case-insensitive and must be included in the first line.
 
@@ -23,7 +23,7 @@ Parameters are case-insensitive and must be included in the first line.
 
 # Example
 ```
-!meeting duration: 59 channel: general outputchannel: notes
+!meeting --duration 59 --channel general --outputchannel notes
 Hosts: @Garnet @everyone Amethyst
 Fancypants: also @Garnet
 Notes: https://www.github.com
