@@ -20,8 +20,8 @@ DOCUMENTATION_LINK = 'https://github.com/blueridger/MeetingAttendanceDiscordBot/
 
 def batch(iterable, n=1):
     l = len(iterable)
-    for ndx in range(0, l, n):
-        yield iterable[ndx:min(ndx + n, l)]
+    for index in range(0, l, n):
+        yield iterable[index:min(index + n, l)]
 
 def is_int(s):
     try:
@@ -146,8 +146,9 @@ async def startWatching(
 ):
     startTime = meeting_message.created_at
     timeLimitSecs = int(duration_mins) * 60
-    for ids_batch in batch(participant_ids, 3):
-        users = set([(await client.fetch_user(user_id)) for user_id in ids_batch])
+    users = set()
+    for ids_batch in batch(list(participant_ids), 3):
+        users |= set([(await client.fetch_user(user_id)) for user_id in ids_batch])
         await asyncio.sleep(6)
 
     # Watch and build the participants lists and update the output
@@ -155,15 +156,16 @@ async def startWatching(
     while datetime.utcnow() < startTime + timedelta(seconds=timeLimitSecs):
         current_ids = set((await client.fetch_channel(voice_channel_id)).voice_states.keys())
         new_ids = current_ids - participant_ids
+        print(f'[{meeting_message.id}] Found {new_ids}')
         if len(new_ids) > 0:
-            for ids_batch in batch(new_ids, 3):
+            for ids_batch in batch(list(new_ids), 3):
                 users |= set([(await client.fetch_user(user_id)) for user_id in ids_batch])
                 await asyncio.sleep(6)
             users = set(filter(lambda u: not u.bot, users))
-            participants = set([user.mention for user in users])
+            print(f'[{meeting_message.id}] Adding {[user.id for user in users]}')
+            participant_mentions = set([user.mention for user in users])
             participant_ids |= new_ids
-            participants_string = f"\nParticipants: (watching) {' '.join(participants)}"
-            print(f'[{meeting_message.id}] Adding {new_ids}')
+            participants_string = f"\nParticipants: (watching) {' '.join(participant_mentions)}"
             await meeting_message.edit(
                 content=metadata + participants_string,
                 suppress=True
@@ -173,8 +175,9 @@ async def startWatching(
     print(f'[{meeting_message.id}] Finished watching.')
 
     # Finalize outputs
-    participants = set([user.mention for user in users])
-    participants_string = f"\nParticipants: {' '.join(participants)}"
+    participant_mentions = set([user.mention for user in users])
+    print(f'[{meeting_message.id}] Final list: {[user.id for user in users]}.')
+    participants_string = f"\nParticipants: {' '.join(participant_mentions)}"
     await asyncio.sleep(6)
     await meeting_message.edit(
         content=metadata + participants_string,
