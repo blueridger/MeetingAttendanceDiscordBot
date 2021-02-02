@@ -117,7 +117,8 @@ async def on_message(message):
                 duration_mins,
                 message.author,
                 metadata,
-                voice_channel.id
+                voice_channel.id,
+                set()
             )
 
         except discord.errors.NotFound:
@@ -142,7 +143,7 @@ async def startWatching(
     user,
     metadata,
     voice_channel_id,
-    participant_ids=set(),
+    participant_ids,
 ):
     startTime = meeting_message.created_at
     timeLimitSecs = int(duration_mins) * 60
@@ -150,14 +151,13 @@ async def startWatching(
     for ids_batch in batch(list(participant_ids), 3):
         users |= set([(await client.fetch_user(user_id)) for user_id in ids_batch])
         await asyncio.sleep(6)
-
+    print(f'[{meeting_message.id}] Starting list: {[user.id for user in users]}')
     # Watch and build the participants lists and update the output
     print('[%s] Starting to watch.' % meeting_message.id)
     while datetime.utcnow() < startTime + timedelta(seconds=timeLimitSecs):
         current_ids = set((await client.fetch_channel(voice_channel_id)).voice_states.keys())
         new_ids = current_ids - participant_ids
-        print(f'[{meeting_message.id}] Found {new_ids}')
-        if len(new_ids) > 0:
+        if new_ids:
             for ids_batch in batch(list(new_ids), 3):
                 users |= set([(await client.fetch_user(user_id)) for user_id in ids_batch])
                 await asyncio.sleep(6)
@@ -171,12 +171,12 @@ async def startWatching(
                 suppress=True
             )
         await asyncio.sleep(BUSY_WAIT_INTERVAL_SECONDS)
+        print(f'[{meeting_message.id}] Current list: {[user.id for user in users]}')
 
     print(f'[{meeting_message.id}] Finished watching.')
 
     # Finalize outputs
     participant_mentions = set([user.mention for user in users])
-    print(f'[{meeting_message.id}] Final list: {[user.id for user in users]}.')
     participants_string = f"\nParticipants: {' '.join(participant_mentions)}"
     await asyncio.sleep(6)
     await meeting_message.edit(
@@ -184,7 +184,7 @@ async def startWatching(
         suppress=True
     )
     roam_participants = '\n'.join([f'[[{user.name}]]' for user in users])
-    roam_formatted = f"\n```{roam_participants}```"
+    roam_formatted = f'\n```{roam_participants if users else "no participants"}```'
     await user.send(content=metadata + roam_formatted)
     print('[%s] Finished thread.' % meeting_message.id)
 
