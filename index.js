@@ -135,6 +135,7 @@ async function watchChannel(
         })
         const participantsString = `\nParticipants: (watching) ${Array.from(participantMentions).join(' ')}`
         await meetingMsg.edit(metadata + participantsString)
+        await meetingMsg.suppressEmbeds(true)
         console.log(`[${meetingMsg.id}] Current list: [${Array.from(participantMentions)}].`)
         await sleep(BUSY_WAIT_INTERVAL_SECONDS)
     }
