@@ -10,6 +10,7 @@ It posts a meeting summary message that auto-updates a list of participants as p
 ```
 **Required Parameter:**
 - `--duration 60` is for choosing how many **minutes** the bot should watch for participants. Any integer between 1 and 120 is accepted.
+  - While the meeting is being watched by the bot, the original command-user can edit the duration by simply editing the parameter in the original command that they sent.
 
 **Optional Parameters:**
 - `--channel voice-channel-name` is for selecting which voice channel to watch. A partial name will be matched to the first channel that matches. Defaults to the one you are already in.
@@ -19,6 +20,7 @@ Parameters are case-insensitive and must be included in the first line.
 
 **Content:**
 - All lines after the first line will be included as is in the output, including mentions and styling.
+  - While the meeting is being watched by the bot, the original command-user can edit the content by simply editing it in the original command that they sent.
 
 
 # Example

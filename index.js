@@ -122,9 +122,11 @@ async function watchChannel(
     metadata,
     voiceChannel,
 ) {
-    startTime = new Date(meetingMsg.createdAt)
-    expiration = startTime.setMinutes(startTime.getMinutes() + durationMins)
+    let startTime = new Date(meetingMsg.createdAt)
+    let expiration = startTime.setMinutes(startTime.getMinutes() + durationMins)
     const participantMentions = new Set()
+    let updatedMetadata = metadata
+    let updatedArgs = parseArgumentsFromMessage(await commandMsg.fetch())
 
     console.log(`[${meetingMsg.id}] Starting to watch.`)
     while (Date.now() < expiration) {
@@ -134,16 +136,22 @@ async function watchChannel(
             }
         })
         const participantsString = `\nParticipants: (watching) ${Array.from(participantMentions).join(' ')}`
-        await meetingMsg.edit(metadata + participantsString)
+        updatedArgs = updatedArgs ? parseArgumentsFromMessage(await commandMsg.fetch()) : null
+        if (updatedArgs) {
+            updatedMetadata = updatedArgs.metadata
+            startTime = new Date(meetingMsg.createdAt)
+            expiration = startTime.setMinutes(startTime.getMinutes() + updatedArgs.durationMins)
+        }
+        await meetingMsg.edit(updatedMetadata + participantsString)
         await meetingMsg.suppressEmbeds(true)
         console.log(`[${meetingMsg.id}] Current list: [${Array.from(participantMentions)}].`)
-        await sleep(config.BUSY_WAIT_INTERVAL_SECONDS)
+        await sleep(config.WAIT_INTERVAL_SECONDS)
     }
 
     console.log(`[${meetingMsg.id}] Finished watching.`)
 
     const participantsString = `\nParticipants: ${Array.from(participantMentions).join(' ')}`
-    await meetingMsg.edit(metadata + participantsString)
+    await meetingMsg.edit(updatedMetadata + participantsString)
 
     console.log(`[${meetingMsg.id}] Finished thread.`)
 }

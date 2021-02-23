@@ -1,3 +1,3 @@
 module.exports = {
-    BUSY_WAIT_INTERVAL_SECONDS: 30
+    WAIT_INTERVAL_SECONDS: 30
 }
