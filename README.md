@@ -1,7 +1,7 @@
 # Meeting Attendance Discord Bot
 This is a simple discord bot that automates an operational process for the [SourceCred](sourcecred.io) community. It may be useful for other communities.
 
-It posts a meeting summary message that auto-updates a list of participants as people join a designated voice channel in discord. It also direct messages a Roam Research friendly version of the participants list to the command user at the end of the meeting.
+It posts a meeting summary message that auto-updates a list of participants as people join a designated voice channel in discord.
 
 # Usage
 ```
@@ -48,7 +48,7 @@ Participants: @Pearl @Garnet
 ```
 
 # Installation
-I used the infrastructure described in this tutorial: https://www.freecodecamp.org/news/create-a-discord-bot-with-python/
+I used the infrastructure described in this tutorial: https://www.codementor.io/@garethdwyer/building-a-discord-bot-with-node-js-and-repl-it-mm46r1u8y
 
 I gave the bot these permissions, but it may not need all of them. (permissions=84992)
 - View Channels
