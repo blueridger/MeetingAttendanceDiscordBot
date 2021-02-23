@@ -5,7 +5,7 @@ It posts a meeting summary message that auto-updates a list of participants as p
 
 # Usage
 ```
-!meeting duration: 60 [optional parameters]
+!meeting --duration 60 [optional parameters]
 [content]
 ```
 **Required Parameter:**
