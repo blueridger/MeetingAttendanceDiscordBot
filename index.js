@@ -1,4 +1,5 @@
 const keep_alive = require('./keep_alive.js')
+const config = require('./config.js')
 const Discord = require('discord.js');
 
 const client = new Discord.Client();
@@ -10,7 +11,6 @@ const KEY_CHANNEL = '--channel'.toLowerCase()
 const KEY_OUTPUT_CHANNEL = '--outputchannel'.toLowerCase()
 
 const REQUIRED_KEYS = [KEY_LENGTH_MINS]
-const BUSY_WAIT_INTERVAL_SECONDS = 30
 const DOCUMENTATION_LINK = 'https://github.com/blueridger/MeetingAttendanceDiscordBot/blob/mainline/README.md'
 
 function* batch(arr, n=1) {
@@ -137,7 +137,7 @@ async function watchChannel(
         await meetingMsg.edit(metadata + participantsString)
         await meetingMsg.suppressEmbeds(true)
         console.log(`[${meetingMsg.id}] Current list: [${Array.from(participantMentions)}].`)
-        await sleep(BUSY_WAIT_INTERVAL_SECONDS)
+        await sleep(config.BUSY_WAIT_INTERVAL_SECONDS)
     }
 
     console.log(`[${meetingMsg.id}] Finished watching.`)
