@@ -20,7 +20,7 @@ Parameters are case-insensitive and must be included in the first line.
 
 **Content:**
 - All lines after the first line will be included as is in the output, including mentions and styling.
-  - While the meeting is being watched by the bot, the original command-user can edit the content by simply editing it in the original command that they sent.
+  - While the meeting is being watched by the bot and for 30 minutes after, the original command-user can edit the content by simply editing it in the original command that they sent.
 
 
 # Example

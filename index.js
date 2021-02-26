@@ -122,8 +122,8 @@ async function watchChannel(
     metadata,
     voiceChannel,
 ) {
-    let startTime = new Date(meetingMsg.createdAt)
-    let expiration = startTime.setMinutes(startTime.getMinutes() + durationMins)
+    let expiration = new Date(meetingMsg.createdAt)
+    expiration.setMinutes(expiration.getMinutes() + durationMins)
     const participantMentions = new Set()
     let updatedMetadata = metadata
     let updatedArgs = parseArgumentsFromMessage(await commandMsg.fetch())
@@ -139,8 +139,8 @@ async function watchChannel(
         updatedArgs = updatedArgs ? parseArgumentsFromMessage(await commandMsg.fetch()) : null
         if (updatedArgs) {
             updatedMetadata = updatedArgs.metadata
-            startTime = new Date(meetingMsg.createdAt)
-            expiration = startTime.setMinutes(startTime.getMinutes() + updatedArgs.durationMins)
+            expiration = new Date(meetingMsg.createdAt)
+            expiration.setMinutes(expiration.getMinutes() + updatedArgs.durationMins)
         }
         await meetingMsg.edit(updatedMetadata + participantsString)
         await meetingMsg.suppressEmbeds(true)
@@ -148,10 +148,24 @@ async function watchChannel(
         await sleep(config.WAIT_INTERVAL_SECONDS)
     }
 
-    console.log(`[${meetingMsg.id}] Finished watching.`)
+    console.log(`[${meetingMsg.id}] Finished watching participants. Watching for edits.`)
 
     const participantsString = `\nParticipants: ${Array.from(participantMentions).join(' ')}`
+    expiration.setMinutes(expiration.getMinutes() + config.WATCH_EDITS_AFTER_MEETING_MINUTES)
+    while (Date.now() < expiration) {
+        updatedArgs = updatedArgs ? parseArgumentsFromMessage(await commandMsg.fetch()) : updatedArgs
+        if (updatedArgs) {
+            updatedMetadata = updatedArgs.metadata
+        }
+        await meetingMsg.edit(updatedMetadata + participantsString)
+        await meetingMsg.suppressEmbeds(true)
+        await sleep(config.WAIT_INTERVAL_SECONDS)
+    }
+
+    console.log(`[${meetingMsg.id}] Finished watching for edits.`)
+
     await meetingMsg.edit(updatedMetadata + participantsString)
+    await meetingMsg.suppressEmbeds(true)
 
     console.log(`[${meetingMsg.id}] Finished thread.`)
 }
