@@ -127,12 +127,17 @@ async function watchChannel(
     const participantMentions = new Set()
     let updatedMetadata = metadata
     let updatedArgs = parseArgumentsFromMessage(await commandMsg.fetch())
+    let totalIntervals = 0
+    const intervalCounts = new Map();
 
     console.log(`[${meetingMsg.id}] Starting to watch.`)
     while (Date.now() < expiration) {
+        totalIntervals++
         (await voiceChannel.fetch()).members.each((member) => {
             if (!member.user.bot) {
-                participantMentions.add(member.user.toString())
+                const mention = member.user.toString()
+                participantMentions.add(mention)
+                intervalCounts.set(mention, (intervalCounts.get(mention) || 0) + 1)
             }
         })
         const participantsString = `\nParticipants: (watching) ${Array.from(participantMentions).join(' ')}`
@@ -148,8 +153,13 @@ async function watchChannel(
         await sleep(config.WAIT_INTERVAL_SECONDS)
     }
 
-    console.log(`[${meetingMsg.id}] Finished watching participants. Watching for edits.`)
+    for (const [key, value] of intervalCounts) {
+        if (value < config.DECIMAL_PERCENT_ATTENDANCE_REQUIRED * totalIntervals)
+            participantMentions.delete(key)
+    }
+    console.log(`[${meetingMsg.id}] List after removals: [${Array.from(participantMentions)}].`)
 
+    console.log(`[${meetingMsg.id}] Finished watching participants. Watching for edits.`)
     const participantsString = `\nParticipants: ${Array.from(participantMentions).join(' ')}`
     expiration.setMinutes(expiration.getMinutes() + config.WATCH_EDITS_AFTER_MEETING_MINUTES)
     while (Date.now() < expiration) {
