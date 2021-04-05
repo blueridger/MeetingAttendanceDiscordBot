@@ -93,8 +93,8 @@ async function handleAdminEdit(msg) {
     if (msg.reference && msg.content.startsWith(EDIT_CMD) && msg.member.roles.cache.get(config.ADMIN_ROLE)) {
         const targetMsg = await client.channels.cache.get(msg.reference.channelID).messages.fetch(msg.reference.messageID);
         if (targetMsg && targetMsg.author.id === client.user.id) {
-            const metadata = msg.content.slice(msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length) + '\n';
-            const suffix = targetMsg.content.slice(targetMsg.content.lastIndexOf('\n') > 0 ? targetMsg.content.lastIndexOf('\n') : 0);
+            const metadata = msg.content.slice(msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length);
+            const suffix = "\n" + targetMsg.content.slice(targetMsg.content.lastIndexOf('\n') > 0 ? targetMsg.content.lastIndexOf('\n') + 1 : 0);
             await targetMsg.edit(metadata + suffix);
         }
     }
