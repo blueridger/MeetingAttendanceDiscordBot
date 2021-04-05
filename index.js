@@ -5,6 +5,9 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const token = process.env.DISCORD_BOT_SECRET;
 
+const MEETING_CMD = '!meeting'
+const EDIT_CMD = '!edit'
+
 // keys must be lowercase
 const KEY_LENGTH_MINS = '--duration'.toLowerCase()
 const KEY_CHANNEL = '--channel'.toLowerCase()
@@ -35,7 +38,8 @@ client.on('message', async msg => {
     if (msg.author.id === client.user.id) {
         return;
     }
-    if (msg.content.startsWith("!meeting")) {
+    handleAdminEdit(msg);
+    if (msg.content.startsWith(MEETING_CMD)) {
         try {
             const args = parseArgumentsFromMessage(msg)
             if (!args) return
@@ -84,6 +88,17 @@ client.on('message', async msg => {
         }
     }
 });
+
+async function handleAdminEdit(msg) {
+    if (msg.reference && msg.content.startsWith(EDIT_CMD) && msg.member.roles.cache.get(config.ADMIN_ROLE)) {
+        const targetMsg = await client.channels.cache.get(msg.reference.channelID).messages.fetch(msg.reference.messageID);
+        if (targetMsg && targetMsg.author.id === client.user.id) {
+            const metadata = msg.content.slice(msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length) + '\n';
+            const suffix = targetMsg.content.slice(targetMsg.content.lastIndexOf('\n') > 0 ? targetMsg.content.lastIndexOf('\n') : 0);
+            await targetMsg.edit(metadata + suffix);
+        }
+    }
+}
 
 function parseArgumentsFromMessage(msg) {
     let voiceChannelSubstring, outputChannelSubstring, durationMins;

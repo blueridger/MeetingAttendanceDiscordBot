@@ -49,6 +49,16 @@ Notes: https://www.github.com
 Participants: @Pearl @Garnet
 ```
 
+# Admin Edit Feature
+Sometimes the bot crashes. Sometimes you forgot to add a piece of info and the edits expiration has passed. Users with the configured admin role can use this command as a last resort. New content will overwrite the old content, so you probably want to copy and paste the content from the original message and make edits.
+
+```
+!edit
+[content]
+```
+
+Note: If you use this before the edits expiration has passed, you edits will be overwritten.
+
 # Installation
 I used the infrastructure described in this tutorial: https://www.codementor.io/@garethdwyer/building-a-discord-bot-with-node-js-and-repl-it-mm46r1u8y
 
