@@ -145,7 +145,7 @@ async function watchChannel(
     let totalIntervals = 0
     const intervalCounts = new Map();
 
-    console.log(`[${meetingMsg.id}] Starting to watch.`)
+    console.log(`[${meetingMsg.id}] Starting to watch channel [${voiceChannel.id}].`)
     while (Date.now() < expiration) {
         totalIntervals++
         (await voiceChannel.fetch()).members.each((member) => {
