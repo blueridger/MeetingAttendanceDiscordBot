@@ -62,6 +62,8 @@ Note: If you use this before the edits expiration has passed, you edits will be 
 # Installation
 I used the infrastructure described in this tutorial: https://www.codementor.io/@garethdwyer/building-a-discord-bot-with-node-js-and-repl-it-mm46r1u8y
 
+You will need to fork this repo to set your own configs.
+
 I gave the bot these permissions, but it may not need all of them. (permissions=84992)
 - View Channels
 - Send Messages
