@@ -61,6 +61,7 @@ Note: If you use this before the edits expiration has passed, you edits will be 
 
 # Installation
 I used the infrastructure described in this tutorial: https://www.codementor.io/@garethdwyer/building-a-discord-bot-with-node-js-and-repl-it-mm46r1u8y
+If you want to self-host, add [dotenv](https://www.npmjs.com/package/dotenv) as a dependency and add `require('dotenv').config()` to the top of index.js
 
 You will need to fork this repo to set your own configs.
 
