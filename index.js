@@ -29,6 +29,10 @@ function sleep(seconds) {
   return new Promise(resolve => setTimeout(resolve, seconds * 1000));
 }
 
+function participantsStr(set, watching = true) {
+    return watching ? `\nParticipants: (watching) ${Array.from(set).join(' ')}` : `\nParticipants: ${Array.from(set).join(' ')}`
+}
+
 client.on('ready', () => {
   console.log("I'm in");
   console.log(client.user.username);
@@ -104,7 +108,7 @@ function parseArgumentsFromMessage(msg) {
     let voiceChannelSubstring, outputChannelSubstring, durationMins;
     const firstLineBreakIndex = msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length
     const command = msg.content.slice(0, firstLineBreakIndex).toLowerCase().match(/\S+/g) || []
-    const metadata = msg.content.slice(firstLineBreakIndex)
+    const metadata = msg.content.slice(firstLineBreakIndex).slice(0, 1500) // trimming to 1500 chars prevents infinite rollover loops
 
     try {
         if (command.includes(KEY_CHANNEL))
@@ -145,25 +149,44 @@ async function watchChannel(
     let totalIntervals = 0
     const intervalCounts = new Map();
 
+    const currentMeetingMsg = meetingMsg;
+    const currentParticipantMentions = new Set()
     console.log(`[${meetingMsg.id}] Starting to watch channel [${voiceChannel.id}].`)
     while (Date.now() < expiration) {
         totalIntervals++
         (await voiceChannel.fetch()).members.each((member) => {
             if (!member.user.bot) {
                 const mention = member.user.toString()
+                if (!participantMentions.has(mention)) currentParticipantMentions.add(mention);
                 participantMentions.add(mention)
                 intervalCounts.set(mention, (intervalCounts.get(mention) || 0) + 1)
             }
         })
-        const participantsString = `\nParticipants: (watching) ${Array.from(participantMentions).join(' ')}`
         updatedArgs = updatedArgs ? parseArgumentsFromMessage(await commandMsg.fetch()) : null
         if (updatedArgs) {
             updatedMetadata = updatedArgs.metadata
             expiration = new Date(meetingMsg.createdAt)
             expiration.setMinutes(expiration.getMinutes() + updatedArgs.durationMins)
         }
-        await meetingMsg.edit(updatedMetadata + participantsString)
-        await meetingMsg.suppressEmbeds(true)
+        // this section is for rolling over in the case of approaching the character limit
+        let tempMentions = new Set()
+        let participantsString = participantsStr(tempMentions);
+        currentParticipantMentions.forEach(mention => {
+            tempMentions.add(mention)
+            const testParticipantsString = participantsStr(tempMentions)
+            if ((updatedMetadata + testParticipantsString).length <= 1950) {
+                participantString = testParticipantString;
+            } else {
+                await currentMeetingMsg.edit(updatedMetadata + participantsString)
+                tempMentions.clear()
+                tempMentions.add(mention)
+                participantString = participantsStr(tempMentions)
+                currentMeetingMsg = await currentMeetingMessage.channel.send(updatedMetadata + participantString)
+            }
+        })
+        currentParticipantMentions = tempMentions
+        await currentMeetingMsg.edit(updatedMetadata + participantsString)
+        await currentMeetingMsg.suppressEmbeds(true)
         console.log(`[${meetingMsg.id}] Current list: [${Array.from(participantMentions)}].`)
         await sleep(config.WAIT_INTERVAL_SECONDS)
     }
