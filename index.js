@@ -7,6 +7,7 @@ const token = process.env.DISCORD_BOT_SECRET;
 
 const MEETING_CMD = '!meeting'
 const EDIT_CMD = '!edit'
+const APPEND_CMD = '!append'
 
 // keys must be lowercase
 const KEY_LENGTH_MINS = '--duration'.toLowerCase()
@@ -39,6 +40,7 @@ client.on('message', async msg => {
         return;
     }
     handleAdminEdit(msg);
+    handleAdminAppend(msg);
     if (msg.content.startsWith(MEETING_CMD)) {
         try {
             const args = parseArgumentsFromMessage(msg)
@@ -96,6 +98,17 @@ async function handleAdminEdit(msg) {
             const metadata = msg.content.slice(msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length);
             const suffix = "\n" + targetMsg.content.slice(targetMsg.content.lastIndexOf('\n') > 0 ? targetMsg.content.lastIndexOf('\n') + 1 : 0);
             await targetMsg.edit(metadata + suffix);
+        }
+    }
+}
+
+async function handleAdminAppend(msg) {
+    if (msg.reference && msg.content.startsWith(APPEND_CMD) && msg.member.roles.cache.get(config.ADMIN_ROLE)) {
+        const targetMsg = await client.channels.cache.get(msg.reference.channelID).messages.fetch(msg.reference.messageID);
+        if (targetMsg && targetMsg.author.id === client.user.id) {
+            const newMetadata = msg.content.slice(msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length);
+            const oldMetadata = targetMsg.content;
+            await targetMsg.edit(oldMetadata + newMetadata);
         }
     }
 }
