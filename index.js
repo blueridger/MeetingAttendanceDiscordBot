@@ -17,7 +17,7 @@ const KEY_OUTPUT_CHANNEL = '--outputchannel'.toLowerCase()
 const REQUIRED_KEYS = [KEY_LENGTH_MINS]
 const DOCUMENTATION_LINK = 'https://github.com/blueridger/MeetingAttendanceDiscordBot/blob/mainline/README.md'
 
-function* batch(arr, n=1) {
+function* batch(arr, n = 1) {
     const l = arr.length
     let i = 0;
     while (i <= l) {
@@ -27,12 +27,12 @@ function* batch(arr, n=1) {
 }
 
 function sleep(seconds) {
-  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
 }
 
 client.on('ready', () => {
-  console.log("I'm in");
-  console.log(client.user.username);
+    console.log("I'm in");
+    console.log(client.user.username);
 });
 
 client.on('message', async msg => {
@@ -46,12 +46,12 @@ client.on('message', async msg => {
             const args = parseArgumentsFromMessage(msg)
             if (!args) return
             let {
-                metadata, 
-                voiceChannelSubstring, 
-                outputChannelSubstring, 
+                metadata,
+                voiceChannelSubstring,
+                outputChannelSubstring,
                 durationMins
             } = args
-            
+
             let voiceChannel;
             if (voiceChannelSubstring) {
                 voiceChannel = msg.guild.channels.cache.find(channel => channel.type === 'voice' && channel.name.toLowerCase().includes(voiceChannelSubstring))
@@ -113,6 +113,11 @@ async function handleAdminAppend(msg) {
     }
 }
 
+function parseMetadataFromMeetingMessage(msg) {
+    const lastLineBreakIndex = msg.content.indexOf('\nParticipants:') > 0 ? msg.content.lastIndexOf('\nParticipants:') : 0
+    return msg.content.slice(0, lastLineBreakIndex)
+}
+
 function parseArgumentsFromMessage(msg) {
     let voiceChannelSubstring, outputChannelSubstring, durationMins;
     const firstLineBreakIndex = msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length
@@ -140,7 +145,7 @@ function parseArgumentsFromMessage(msg) {
         return null
     }
     durationMins = parseInt(durationMins, 10)
-    return {metadata, voiceChannelSubstring, outputChannelSubstring, durationMins}
+    return { metadata, voiceChannelSubstring, outputChannelSubstring, durationMins }
 }
 
 async function watchChannel(
@@ -154,6 +159,7 @@ async function watchChannel(
     expiration.setMinutes(expiration.getMinutes() + durationMins)
     const participantMentions = new Set()
     let updatedMetadata = metadata
+    let actualMetadata = metadata
     let updatedArgs = parseArgumentsFromMessage(await commandMsg.fetch())
     let totalIntervals = 0
     const intervalCounts = new Map();
@@ -169,13 +175,19 @@ async function watchChannel(
             }
         })
         const participantsString = `\nParticipants: (watching) ${Array.from(participantMentions).join(' ')}`
+        actualMetadata = parseMetadataFromMeetingMessage(await meetingMsg.fetch())
         updatedArgs = updatedArgs ? parseArgumentsFromMessage(await commandMsg.fetch()) : null
         if (updatedArgs) {
-            updatedMetadata = updatedArgs.metadata
+            console.log(updatedMetadata.length)
+            console.log(updatedArgs.metadata.length)
+            if (updatedMetadata != updatedArgs.metadata) {
+                updatedMetadata = updatedArgs.metadata;
+                actualMetadata = updatedMetadata;
+            }
             expiration = new Date(meetingMsg.createdAt)
             expiration.setMinutes(expiration.getMinutes() + updatedArgs.durationMins)
         }
-        await meetingMsg.edit(updatedMetadata + participantsString)
+        await meetingMsg.edit(actualMetadata + participantsString)
         await meetingMsg.suppressEmbeds(true)
         console.log(`[${meetingMsg.id}] Current list: [${Array.from(participantMentions)}].`)
         await sleep(config.WAIT_INTERVAL_SECONDS)
@@ -191,11 +203,15 @@ async function watchChannel(
     const participantsString = `\nParticipants: ${Array.from(participantMentions).join(' ')}`
     expiration.setMinutes(expiration.getMinutes() + config.WATCH_EDITS_AFTER_MEETING_MINUTES)
     while (Date.now() < expiration) {
+        actualMetadata = parseMetadataFromMeetingMessage(await meetingMsg.fetch())
         updatedArgs = updatedArgs ? parseArgumentsFromMessage(await commandMsg.fetch()) : updatedArgs
         if (updatedArgs) {
-            updatedMetadata = updatedArgs.metadata
+            if (updatedMetadata != updatedArgs.metadata) {
+                updatedMetadata = updatedArgs.metadata;
+                actualMetadata = updatedMetadata;
+            }
         }
-        await meetingMsg.edit(updatedMetadata + participantsString)
+        await meetingMsg.edit(actualMetadata + participantsString)
         await meetingMsg.suppressEmbeds(true)
         await sleep(config.WAIT_INTERVAL_SECONDS)
     }
