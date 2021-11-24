@@ -91,9 +91,23 @@ client.on('message', async msg => {
     }
 });
 
+function parseMessageLinkParam(msg) {
+    const split = msg.content.slice(0, msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length).split(" ");
+    if (split.length !== 2) {
+        msg.author.send(
+            "Usage:\n!edit messageLink\n!append messageLink\nExample:\n!edit https://discord.com/channels/798975165342023700/798975167971196981/913128715372859412"
+        )
+        return null
+    }
+    return split[1].match(/https\:\/\/discord\.com\/channels\/[0-9]*\/([0-9]*)\/([0-9]*)/)
+}
+
 async function handleAdminEdit(msg) {
-    if (msg.reference && msg.content.startsWith(EDIT_CMD) && msg.member.roles.cache.get(config.ADMIN_ROLE)) {
-        const targetMsg = await client.channels.cache.get(msg.reference.channelID).messages.fetch(msg.reference.messageID);
+    if (msg.content.startsWith(EDIT_CMD) && msg.member.roles.cache.get(config.ADMIN_ROLE)) {
+        const parts = parseMessageLinkParam(msg);
+        if (!parts) return;
+        const [, channelId, messageId] = parts;
+        const targetMsg = await client.channels.cache.get(channelId).messages.fetch(messageId);
         if (targetMsg && targetMsg.author.id === client.user.id) {
             const metadata = msg.content.slice(msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length);
             const suffix = "\n" + targetMsg.content.slice(targetMsg.content.lastIndexOf('\n') > 0 ? targetMsg.content.lastIndexOf('\n') + 1 : 0);
@@ -103,19 +117,27 @@ async function handleAdminEdit(msg) {
 }
 
 async function handleAdminAppend(msg) {
-    if (msg.reference && msg.content.startsWith(APPEND_CMD) && msg.member.roles.cache.get(config.ADMIN_ROLE)) {
-        const targetMsg = await client.channels.cache.get(msg.reference.channelID).messages.fetch(msg.reference.messageID);
+    if (msg.content.startsWith(APPEND_CMD) && msg.member.roles.cache.get(config.ADMIN_ROLE)) {
+        const parts = parseMessageLinkParam(msg);
+        if (!parts) return;
+        const [, channelId, messageId] = parts;
+        const targetMsg = await client.channels.cache.get(channelId).messages.fetch(messageId);
         if (targetMsg && targetMsg.author.id === client.user.id) {
             const newMetadata = msg.content.slice(msg.content.indexOf('\n') > 0 ? msg.content.indexOf('\n') : msg.content.length);
-            const oldMetadata = targetMsg.content;
-            await targetMsg.edit(oldMetadata + newMetadata);
+            const oldMetadata = parseMetadataFromMeetingMessage(targetMsg);
+            const participants = parseParticipantsFromMeetingMessage(targetMsg);
+            await targetMsg.edit(oldMetadata + newMetadata + participants);
         }
     }
 }
 
 function parseMetadataFromMeetingMessage(msg) {
-    const lastLineBreakIndex = msg.content.indexOf('\nParticipants:') > 0 ? msg.content.lastIndexOf('\nParticipants:') : 0
-    return msg.content.slice(0, lastLineBreakIndex)
+    const lastParticipantsIndex = msg.content.indexOf('\nParticipants:') > 0 ? msg.content.lastIndexOf('\nParticipants:') : 0
+    return msg.content.slice(0, lastParticipantsIndex)
+}
+function parseParticipantsFromMeetingMessage(msg) {
+    const lastLineBreakIndex = msg.content.indexOf('\n') > 0 ? msg.content.lastIndexOf('\n') : 0
+    return (lastLineBreakIndex ? "" : "\n") + msg.content.slice(lastLineBreakIndex)
 }
 
 function parseArgumentsFromMessage(msg) {
@@ -178,8 +200,6 @@ async function watchChannel(
         actualMetadata = parseMetadataFromMeetingMessage(await meetingMsg.fetch())
         updatedArgs = updatedArgs ? parseArgumentsFromMessage(await commandMsg.fetch()) : null
         if (updatedArgs) {
-            console.log(updatedMetadata.length)
-            console.log(updatedArgs.metadata.length)
             if (updatedMetadata != updatedArgs.metadata) {
                 updatedMetadata = updatedArgs.metadata;
                 actualMetadata = updatedMetadata;

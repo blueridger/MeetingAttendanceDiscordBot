@@ -49,12 +49,21 @@ Notes: https://www.github.com
 Participants: @Pearl @Garnet
 ```
 
-# Admin Edit Feature
-Sometimes the bot crashes. Sometimes you forgot to add a piece of info and the edits expiration has passed. Users with the configured admin role can REPLY to the bot's message with this command as a last resort. New content will overwrite the old content, so you probably want to copy and paste the content from the original message and make edits.
+# Admin Edit/Append Feature
+Sometimes the bot crashes. Sometimes you forgot to add a piece of info and the edits expiration has passed. Users with the configured admin role can use the edit/append commands as a last resort. Using the edit command, new content will overwrite the old content. The append command will simply add content to the end of the existing content.
 
 ```
-!edit
+!edit messageLink
 [content]
+
+!append messageLink
+[content]
+```
+Example:
+```
+!edit messageLink
+my new content :)
+yay
 ```
 
 Note: If you use this before the edits expiration has passed, you edits will be overwritten.
