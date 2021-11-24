@@ -66,7 +66,7 @@ my new content :)
 yay
 ```
 
-Note: If you use this before the edits expiration has passed, you edits will be overwritten.
+Note: If the original command user is also making edits by editing their original command, your edits overwrite each other.
 
 # Installation
 I used the infrastructure described in this tutorial: https://www.codementor.io/@garethdwyer/building-a-discord-bot-with-node-js-and-repl-it-mm46r1u8y
