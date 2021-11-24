@@ -53,15 +53,16 @@ Participants: @Pearl @Garnet
 Sometimes the bot crashes. Sometimes you forgot to add a piece of info and the edits expiration has passed. Users with the configured admin role can use the edit/append commands as a last resort. Using the edit command, new content will overwrite the old content. The append command will simply add content to the end of the existing content.
 
 ```
-!edit messageLink
+!edit botMessageLink
 [content]
 
-!append messageLink
+!append botMessageLink
 [content]
 ```
+**botMessageLink** refers to the message link for the bot's message, not the original command.
 Example:
 ```
-!edit https://discord.com/channels/798975165342023700/798975167971196981/913133132243402763
+!edit https://discord.com/channels/798975165342023700/798975167971196981/913132937086664745
 my new content :)
 yay
 ```
