@@ -61,7 +61,7 @@ Sometimes the bot crashes. Sometimes you forgot to add a piece of info and the e
 ```
 Example:
 ```
-!edit messageLink
+!edit https://discord.com/channels/798975165342023700/798975167971196981/913133132243402763
 my new content :)
 yay
 ```
