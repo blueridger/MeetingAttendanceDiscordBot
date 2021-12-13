@@ -82,3 +82,5 @@ I gave the bot these permissions, but it may not need all of them. (permissions=
 - Embed Links
 - Read Message History
 
+Then set the admin role in the config.js file.
+
