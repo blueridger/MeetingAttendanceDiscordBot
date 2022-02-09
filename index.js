@@ -113,6 +113,8 @@ async function handleAdminEdit(msg) {
             const suffix = "\n" + targetMsg.content.slice(targetMsg.content.lastIndexOf('\n') > 0 ? targetMsg.content.lastIndexOf('\n') + 1 : 0);
             await targetMsg.edit(metadata + suffix);
         }
+    } else if (msg.content.startsWith(EDIT_CMD) && !msg.member.roles.cache.get(config.ADMIN_ROLE)) {
+        msg.author.send("You don't have the correct role to use that command.")
     }
 }
 
@@ -128,6 +130,8 @@ async function handleAdminAppend(msg) {
             const participants = parseParticipantsFromMeetingMessage(targetMsg);
             await targetMsg.edit(oldMetadata + newMetadata + participants);
         }
+    } else if (msg.content.startsWith(APPEND_CMD) && !msg.member.roles.cache.get(config.ADMIN_ROLE)) {
+        msg.author.send("You don't have the correct role to use that command.")
     }
 }
 
